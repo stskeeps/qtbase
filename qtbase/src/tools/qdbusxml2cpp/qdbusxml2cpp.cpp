@@ -65,7 +65,6 @@ static QString parentClassName;
 static QString proxyFile;
 static QString adaptorFile;
 static QString inputFile;
-static QDateTime classCreationTime;
 static bool skipNamespaces;
 static bool verbose;
 static bool includeMocs;
@@ -217,13 +216,10 @@ static void parseCmdLine(QStringList args)
 static QDBusIntrospection::Interfaces readInput()
 {
     QFile input(inputFile);
-    if (inputFile.isEmpty() || inputFile == QLatin1String("-")) {
+    if (inputFile.isEmpty() || inputFile == QLatin1String("-"))
         input.open(stdin, QIODevice::ReadOnly);
-        classCreationTime = QDateTime::currentDateTime();
-    } else {
+    else
         input.open(QIODevice::ReadOnly);
-        classCreationTime = QFileInfo(input).lastModified();
-    }
 
     QByteArray data = input.readAll();
 
@@ -555,7 +551,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
     }
     includeGuard = QString(QLatin1String("%1_%2"))
                    .arg(includeGuard)
-                   .arg(classCreationTime.toTime_t());
+                   .arg(QDateTime::currentDateTime().toTime_t());
     hs << "#ifndef " << includeGuard << endl
        << "#define " << includeGuard << endl
        << endl;
