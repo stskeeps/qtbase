@@ -3909,6 +3909,17 @@ setBootstrapVariable()
     getQMakeConf "$1" | echo ${2-$1} = `if [ -n "$3" ]; then sed "$3"; else cat; fi` >> "$mkfile"
 }
 
+# select the qmake used during qt build
+QMAKE="$outpath/bin/qmake"
+if [ ! -z "$ACCELERATE_QT_BUILD" ]; then
+    # exec qmake to test if it exists (for scratchbox2 mapping magic)
+    /usr/lib/qt5/bin/qmake -v >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Using accelerated qmake for Qt build..."
+        QMAKE=/usr/lib/qt5/bin/qmake
+    fi
+fi
+
 # build qmake
 if true; then ###[ '!' -f "$outpath/bin/qmake" ];
     echo "Creating qmake..."
@@ -4087,7 +4098,7 @@ fi
 #-------------------------------------------------------------------------------
 # Verify makespec
 #-------------------------------------------------------------------------------
-QMAKE_OUTPUT=`$outpath/bin/qmake -E -nocache -spec "$XQMAKESPEC" "QT=" $DEV_NULL 2>&1 >/dev/null`
+QMAKE_OUTPUT=`"$QMAKE" -E -nocache -spec "$XQMAKESPEC" "QT=" $DEV_NULL 2>&1 >/dev/null`
 if [ $? != "0" ]; then
     echo "Failed to process makespec for platform '$XPLATFORM'"
     if [ "$OPT_VERBOSE" = "yes" ]; then
@@ -4103,7 +4114,7 @@ fi
 #-------------------------------------------------------------------------------
 if [ -z "$PKG_CONFIG" ]; then
     # See if PKG_CONFIG is set in the mkspec:
-    PKG_CONFIG="`"$outpath/bin/qmake" -E -nocache -spec "$XQMAKESPEC" "CONFIG=" $DEV_NULL 2>&1 | sed -n -e 's,^PKG_CONFIG = \(.*\),\1,p'`"
+    PKG_CONFIG="`"$QMAKE" -E -nocache -spec "$XQMAKESPEC" "CONFIG=" $DEV_NULL 2>&1 | sed -n -e 's,^PKG_CONFIG = \(.*\),\1,p'`"
 fi
 if [ -z "$PKG_CONFIG" ]; then
     PKG_CONFIG=`"$WHICH" pkg-config 2>/dev/null`
@@ -6870,10 +6881,10 @@ if [ "$CFG_PROCESS" != "no" ]; then
 
     if [ "$CFG_PROCESS" = "full" ]; then
         echo "Creating makefiles. Please wait..."
-        "$outpath/bin/qmake" -r "$relpath"
+        "$QMAKE" -r "$relpath"
         echo "Done"
     else
-        "$outpath/bin/qmake" "$relpath"
+        "$QMAKE" "$relpath"
     fi
 fi
 
