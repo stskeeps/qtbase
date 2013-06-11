@@ -553,7 +553,7 @@ export ACCELERATE_QT_BUILD="set"
 %endif
 
 MAKEFLAGS=%{?_smp_mflags} \
-./configure --disable-static \
+./configure -v --disable-static \
     -confirm-license \
     -developer-build \
     -platform linux-g++ \
