@@ -140,6 +140,7 @@ void QMinimalEglScreen::createAndSetPlatformContext()
     } else {
         platformFormat.setDepthBufferSize(24);
         platformFormat.setStencilBufferSize(8);
+        platformFormat.setAlphaBufferSize(8);
         platformFormat.setRedBufferSize(8);
         platformFormat.setGreenBufferSize(8);
         platformFormat.setBlueBufferSize(8);
