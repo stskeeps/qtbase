@@ -548,10 +548,6 @@ This package contains the Qt5 development defaults package
 %build
 touch .git
 
-%if 0%{?qemu_user_space_build}
-export ACCELERATE_QT_BUILD="set"
-%endif
-
 MAKEFLAGS=%{?_smp_mflags} \
 ./configure -v --disable-static \
     -confirm-license \
