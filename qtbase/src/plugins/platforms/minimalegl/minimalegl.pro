@@ -6,7 +6,7 @@ load(qt_plugin)
 
 QT += core-private gui-private platformsupport-private
 
-#DEFINES += QEGL_EXTRA_DEBUG
+DEFINES += QEGL_EXTRA_DEBUG
 
 #DEFINES += Q_OPENKODE
 
