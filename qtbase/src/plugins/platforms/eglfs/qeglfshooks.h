@@ -72,6 +72,7 @@ public:
     virtual QEglFSCursor *createCursor(QEglFSScreen *screen) const;
     virtual bool filterConfig(EGLDisplay display, EGLConfig config) const;
     virtual void waitForVSync() const;
+    virtual void postSwap() const;
 
     virtual const char *fbDeviceName() const;
 

@@ -36,6 +36,9 @@ INCLUDEPATH += $$PWD
     DEFINES += EGLFS_PLATFORM_HOOKS
 }
 
+LIBS += -lhybris-eglplatformcommon -lhybris-hwcomposerwindow -lhardware -lsync
+QMAKE_CXXFLAGS += -I/usr/include/android -I/usr/include/hybris/eglplatformcommon -I/usr/include/hybris/hwcomposerwindow
+
 CONFIG += egl qpa/genericunixfontdatabase
 
 RESOURCES += $$PWD/cursor.qrc

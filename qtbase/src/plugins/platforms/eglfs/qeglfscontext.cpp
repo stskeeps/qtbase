@@ -81,6 +81,7 @@ void QEglFSContext::swapBuffers(QPlatformSurface *surface)
 
     QEglFSHooks::hooks()->waitForVSync();
     QEGLPlatformContext::swapBuffers(surface);
+    QEglFSHooks::hooks()->postSwap();
 }
 
 QT_END_NAMESPACE

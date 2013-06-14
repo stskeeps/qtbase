@@ -50,11 +50,24 @@
 #include <private/qmath_p.h>
 #include <private/qcore_unix_p.h>
 
+#include <hwcomposer_window.h>
+#include <hardware/hardware.h>
+#include <hardware/hwcomposer.h>
+#include <malloc.h>
+#include <sync/sync.h>
+
 QT_BEGIN_NAMESPACE
 
 // file descriptor for the frame buffer
 // this is a global static to keep the QEglFSHooks interface as clean as possible
 static int framebuffer = -1;
+static hw_module_t *hwcModule = 0;
+static hwc_composer_device_1_t *hwcDevicePtr = 0;
+static HWComposerNativeWindow *hwc_win = 0;
+static hwc_display_contents_1_t *hwc_list = 0;
+static hwc_display_contents_1_t **hwc_mList = 0;
+static int oldretire = -1, oldrelease = -1;
+
 
 const char *QEglFSHooks::fbDeviceName() const
 {
@@ -63,10 +76,19 @@ const char *QEglFSHooks::fbDeviceName() const
 
 void QEglFSHooks::platformInit()
 {
+    int err;
     framebuffer = qt_safe_open(fbDeviceName(), O_RDONLY);
 
     if (framebuffer == -1)
         qWarning("EGLFS: Failed to open %s", fbDeviceName());
+
+    err = hw_get_module(HWC_HARDWARE_MODULE_ID, (const hw_module_t **) &hwcModule);
+    assert(err == 0);
+
+    err = hwc_open_1(hwcModule, &hwcDevicePtr);
+    assert(err == 0);
+
+    hwcDevicePtr->blank(hwcDevicePtr, 0, 0);
 }
 
 void QEglFSHooks::platformDestroy()
@@ -234,6 +256,7 @@ QSurfaceFormat QEglFSHooks::surfaceFormatFor(const QSurfaceFormat &inputFormat) 
         newFormat.setBlueBufferSize(5);
     } else {
         newFormat.setStencilBufferSize(8);
+	newFormat.setAlphaBufferSize(8);
         newFormat.setRedBufferSize(8);
         newFormat.setGreenBufferSize(8);
         newFormat.setBlueBufferSize(8);
@@ -249,9 +272,52 @@ bool QEglFSHooks::filterConfig(EGLDisplay, EGLConfig) const
 
 EGLNativeWindowType QEglFSHooks::createNativeWindow(const QSize &size, const QSurfaceFormat &format)
 {
-    Q_UNUSED(size);
     Q_UNUSED(format);
-    return 0;
+    hwc_win = new HWComposerNativeWindow(size.width(), size.height(), HAL_PIXEL_FORMAT_RGBA_8888);
+
+    size_t neededsize = sizeof(hwc_display_contents_1_t) + 2 * sizeof(hwc_layer_1_t);
+    hwc_list = (hwc_display_contents_1_t *) malloc(neededsize);
+    hwc_mList = (hwc_display_contents_1_t **) malloc(HWC_NUM_DISPLAY_TYPES * sizeof(hwc_display_contents_1_t *));
+    const hwc_rect_t r = { 0, 0, size.width(), size.height() };
+
+    int counter = 0;
+    for (; counter < HWC_NUM_DISPLAY_TYPES; counter++)
+	    hwc_mList[counter] = hwc_list;
+
+    hwc_layer_1_t *layer = &hwc_list->hwLayers[0];
+    memset(layer, 0, sizeof(hwc_layer_1_t));
+    layer->compositionType = HWC_FRAMEBUFFER;
+    layer->hints = 0;
+    layer->flags = 0;
+    layer->handle = 0;
+    layer->transform = 0;
+    layer->blending = HWC_BLENDING_PREMULT;
+    layer->sourceCrop = r;
+    layer->displayFrame = r;
+    layer->visibleRegionScreen.numRects = 1;
+    layer->visibleRegionScreen.rects = &layer->displayFrame;
+    layer->acquireFenceFd = -1;
+    layer->releaseFenceFd = -1;
+    layer = &hwc_list->hwLayers[1];
+    memset(layer, 0, sizeof(hwc_layer_1_t));
+    layer->compositionType = HWC_FRAMEBUFFER_TARGET;
+    layer->hints = 0;
+    layer->flags = 0;
+    layer->handle = 0;
+    layer->transform = 0;
+    layer->blending = HWC_BLENDING_NONE;
+    layer->sourceCrop = r;
+    layer->displayFrame = r;
+    layer->visibleRegionScreen.numRects = 1;
+    layer->visibleRegionScreen.rects = &layer->displayFrame;
+    layer->acquireFenceFd = -1;
+    layer->releaseFenceFd = -1;
+
+    hwc_list->retireFenceFd = -1;
+    hwc_list->flags = HWC_GEOMETRY_CHANGED;
+    hwc_list->numHwLayers = 2;
+
+    return (EGLNativeWindowType) static_cast<ANativeWindow *>(hwc_win);
 }
 
 void QEglFSHooks::destroyNativeWindow(EGLNativeWindowType window)
@@ -281,6 +347,35 @@ void QEglFSHooks::waitForVSync() const
     }
 #endif
 }
+
+void QEglFSHooks::postSwap() const
+{
+	ANativeWindowBuffer *front, *back;
+        hwc_win->lockBuffers(&front, &back);
+
+	hwc_mList[0]->hwLayers[0].handle = front->handle;
+	hwc_mList[0]->hwLayers[1].handle = back->handle;
+	oldretire = hwc_mList[0]->retireFenceFd;
+	oldrelease = hwc_mList[0]->hwLayers[0].releaseFenceFd;
+	int err = hwcDevicePtr->prepare(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, hwc_mList);
+	assert(err == 0);
+
+	assert(hwc_mList[0]->hwLayers[0].compositionType == HWC_OVERLAY);
+
+	err = hwcDevicePtr->set(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, hwc_mList);
+	assert(err == 0);
+
+	if (oldrelease != -1)
+	{
+		sync_wait(oldrelease, -1);
+		close(oldrelease);
+	}
+	if (oldretire != -1)
+	{
+		sync_wait(oldretire, -1);
+		close(oldretire);
+	}
+} 
 
 #ifndef EGLFS_PLATFORM_HOOKS
 QEglFSHooks stubHooks;
