@@ -16,6 +16,9 @@ BuildRequires:  pkgconfig(Qt5Declarative)
 BuildRequires:  pkgconfig(Qt5Quick)
 BuildRequires:  pkgconfig(Qt5V8)
 BuildRequires:  pkgconfig(Qt5DBus)
+BuildRequires:  libhybris-devel
+BuildRequires:  libhybris-libEGL-devel
+BuildRequires:  libhybris-libGLESv2-devel
 
 BuildRequires:  fdupes
 
