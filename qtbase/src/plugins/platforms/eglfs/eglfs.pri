@@ -1,5 +1,10 @@
 QT += core-private gui-private platformsupport-private
 
+CONFIG += link_pkgconfig
+
+PKGCONFIG += libudev glib-2.0 mtdev
+
+
 DEFINES += QEGL_EXTRA_DEBUG
 
 #Avoid X11 header collision

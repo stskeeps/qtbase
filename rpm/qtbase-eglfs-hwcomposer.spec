@@ -17,6 +17,8 @@ BuildRequires:  pkgconfig(Qt5Quick)
 BuildRequires:  pkgconfig(Qt5V8)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(udev)
+BuildRequires:  pkgconfig(mtdev)
+BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  libhybris-devel
 BuildRequires:  libhybris-libEGL-devel
 BuildRequires:  libhybris-libGLESv2-devel
