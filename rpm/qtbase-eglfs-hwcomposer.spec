@@ -20,7 +20,7 @@ BuildRequires:  pkgconfig(udev)
 BuildRequires:  libhybris-devel
 BuildRequires:  libhybris-libEGL-devel
 BuildRequires:  libhybris-libGLESv2-devel
-
+BuildRequires:  libhybris-libhardware-devel
 BuildRequires:  fdupes
 
 %description
