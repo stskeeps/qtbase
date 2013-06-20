@@ -66,7 +66,7 @@ static hwc_composer_device_1_t *hwcDevicePtr = 0;
 static HWComposerNativeWindow *hwc_win = 0;
 static hwc_display_contents_1_t *hwc_list = 0;
 static hwc_display_contents_1_t **hwc_mList = 0;
-static int oldretire = -1, oldrelease = -1;
+static int oldretire = -1, oldrelease = -1, oldrelease2 = -1;
 
 
 const char *QEglFSHooks::fbDeviceName() const
@@ -357,6 +357,7 @@ void QEglFSHooks::postSwap() const
 	hwc_mList[0]->hwLayers[1].handle = back->handle;
 	oldretire = hwc_mList[0]->retireFenceFd;
 	oldrelease = hwc_mList[0]->hwLayers[0].releaseFenceFd;
+	oldrelease2 = hwc_mList[0]->hwLayers[1].releaseFenceFd;
 	int err = hwcDevicePtr->prepare(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, hwc_mList);
 	assert(err == 0);
 
@@ -370,6 +371,13 @@ void QEglFSHooks::postSwap() const
 		sync_wait(oldrelease, -1);
 		close(oldrelease);
 	}
+
+	if (oldrelease2 != -1)
+	{
+		sync_wait(oldrelease2, -1);
+		close(oldrelease2);
+	}
+
 	if (oldretire != -1)
 	{
 		sync_wait(oldretire, -1);
