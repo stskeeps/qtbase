@@ -291,7 +291,7 @@ EGLNativeWindowType QEglFSHooks::createNativeWindow(const QSize &size, const QSu
     layer->flags = 0;
     layer->handle = 0;
     layer->transform = 0;
-    layer->blending = HWC_BLENDING_PREMULT;
+    layer->blending = HWC_BLENDING_NONE;
     layer->sourceCrop = r;
     layer->displayFrame = r;
     layer->visibleRegionScreen.numRects = 1;
@@ -353,15 +353,14 @@ void QEglFSHooks::postSwap() const
 	ANativeWindowBuffer *front, *back;
         hwc_win->lockBuffers(&front, &back);
 
-	hwc_mList[0]->hwLayers[0].handle = front->handle;
-	hwc_mList[0]->hwLayers[1].handle = back->handle;
+	hwc_mList[0]->hwLayers[1].handle = front->handle;
+	hwc_mList[0]->hwLayers[0].handle = NULL;
+	hwc_mList[0]->hwLayers[0].flags = HWC_SKIP_LAYER;
 	oldretire = hwc_mList[0]->retireFenceFd;
 	oldrelease = hwc_mList[0]->hwLayers[0].releaseFenceFd;
 	oldrelease2 = hwc_mList[0]->hwLayers[1].releaseFenceFd;
 	int err = hwcDevicePtr->prepare(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, hwc_mList);
 	assert(err == 0);
-
-	assert(hwc_mList[0]->hwLayers[0].compositionType == HWC_OVERLAY);
 
 	err = hwcDevicePtr->set(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, hwc_mList);
 	assert(err == 0);
