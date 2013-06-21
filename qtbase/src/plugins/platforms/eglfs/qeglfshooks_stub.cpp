@@ -350,8 +350,8 @@ void QEglFSHooks::waitForVSync() const
 
 void QEglFSHooks::postSwap() const
 {
-	ANativeWindowBuffer *front, *back;
-        hwc_win->lockBuffers(&front, &back);
+	HWComposerNativeWindowBuffer *front;
+        hwc_win->lockFrontBuffer(&front);
 
 	hwc_mList[0]->hwLayers[1].handle = front->handle;
 	hwc_mList[0]->hwLayers[0].handle = NULL;
@@ -364,6 +364,8 @@ void QEglFSHooks::postSwap() const
 
 	err = hwcDevicePtr->set(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, hwc_mList);
 	assert(err == 0);
+
+	hwc_win->unlockFrontBuffer(front);
 
 	if (oldrelease != -1)
 	{
