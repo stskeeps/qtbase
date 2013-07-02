@@ -2,8 +2,7 @@ QT += core-private gui-private platformsupport-private
 
 CONFIG += link_pkgconfig
 
-PKGCONFIG += libudev glib-2.0 mtdev
-
+PKGCONFIG += libudev glib-2.0 mtdev hybris-egl-platform hwcomposer-egl libhardware libsync
 
 DEFINES += QEGL_EXTRA_DEBUG
 
@@ -40,9 +39,6 @@ INCLUDEPATH += $$PWD
     LIBS    += $$EGLFS_PLATFORM_HOOKS_LIBS
     DEFINES += EGLFS_PLATFORM_HOOKS
 }
-
-LIBS += -lhybris-eglplatformcommon -lhybris-hwcomposerwindow -lhardware -lsync
-QMAKE_CXXFLAGS += -I/usr/include/android -I/usr/include/hybris/eglplatformcommon -I/usr/include/hybris/hwcomposerwindow
 
 CONFIG += egl qpa/genericunixfontdatabase
 
