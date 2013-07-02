@@ -19,10 +19,12 @@ BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(udev)
 BuildRequires:  pkgconfig(mtdev)
 BuildRequires:  pkgconfig(glib-2.0)
-BuildRequires:  libhybris-devel
-BuildRequires:  libhybris-libEGL-devel
-BuildRequires:  libhybris-libGLESv2-devel
-BuildRequires:  libhybris-libhardware-devel
+BuildRequires:  pkgconfig(egl)
+BuildRequires:  pkgconfig(hybris-egl-platform)
+BuildRequires:  pkgconfig(libhardware)
+BuildRequires:  pkgconfig(libsync)
+BuildRequires:  pkgconfig(hwcomposer-egl)
+BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  fdupes
 
 %description
@@ -34,19 +36,19 @@ mobile and embedded systems without rewriting the source code.
 This contains a eglfs plugin for Droid hwcomposer
 
 %prep
-%setup -q -n %{name}-%{version}/qtbase
+%setup -q -n %{name}-%{version}
 
 %build
 export QTDIR=/usr/share/qt5
 touch .git
-cd src/plugins/platforms/eglfs
+cd qtbase/src/plugins/platforms/eglfs
 qmake -qt=5 
 
 make %{?_smp_flags}
 
 %install
 rm -rf %{buildroot}
-cd src/plugins/platforms/eglfs
+cd qtbase/src/plugins/platforms/eglfs
 
 %qmake5_install
 
